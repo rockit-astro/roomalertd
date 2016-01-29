@@ -26,6 +26,7 @@ import Pyro4
 PYRO_HOST = '192.168.0.102'
 PYRO_PORT = 9008
 PYRO_NAME = 'roomalert_daemon'
+PYRO_COMM_TIMEOUT = 5
 
 SCRIPT_NAME = os.path.basename(sys.argv[0])
 
@@ -87,6 +88,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         sys.exit(print_usage(SCRIPT_NAME))
 
+    Pyro4.config.COMMTIMEOUT = PYRO_COMM_TIMEOUT
     if sys.argv[1] == 'status':
         sys.exit(print_status())
     elif sys.argv[1] == 'json':
