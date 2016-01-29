@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+#
+# This file is part of roomalertd.
+#
+# roomalertd is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# roomalertd is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with roomalertd.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Commandline client for querying the latest measurement from roomalertd"""
+
+import datetime
+import json
+import os
+import sys
+import Pyro4
+
+PYRO_HOST = '192.168.0.102'
+PYRO_PORT = 9008
+PYRO_NAME = 'roomalert_daemon'
+
+SCRIPT_NAME = os.path.basename(sys.argv[0])
+
+def print_status():
+    """Prints the latest environment data in human-readable form"""
+    latest = None
+    try:
+        with Pyro4.Proxy('PYRO:' + PYRO_NAME + '@' + PYRO_HOST + ':' + str(PYRO_PORT)) as roomalert:
+            latest = roomalert.last_measurement()
+    except Pyro4.errors.CommunicationError:
+        print('error: unable to communicate with Room Alert daemon')
+        return 1
+
+    if latest is not None:
+        date = datetime.datetime.strptime(latest['date'], '%Y-%m-%dT%H:%M:%SZ')
+        hatch = 'CLOSED' if latest['hatch_closed'] else 'OPEN'
+        trap = 'CLOSED' if latest['trap_closed'] else 'OPEN'
+        print('Data received \033[1m{}\033[0m:'.format(date))
+        print(u'External Temp: \033[1m{} \u2103\033[0m'.format(latest['external_temp']))
+        print(u'External Hum.: \033[1m{} %RH\033[0m'.format(latest['external_humidity']))
+        print(u'Internal Temp: \033[1m{} \u2103\033[0m'.format(latest['internal_temp']))
+        print(u'Internal Hum.: \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
+        print(u'Rm Alert Temp: \033[1m{} \u2103\033[0m'.format(latest['roomalert_temp']))
+        print(u'Rm Alert Hum.: \033[1m{} %RH\033[0m'.format(latest['roomalert_humidity']))
+        print(u'   Truss Temp: \033[1m{} \u2103\033[0m'.format(latest['truss_temp']))
+        print(u'   Side Hatch: \033[1m{}\033[0m'.format(hatch))
+        print(u'    Trap Door: \033[1m{}\033[0m'.format(trap))
+        print()
+    else:
+        print('error: failed to query data')
+
+    return 0
+
+def print_json():
+    """Prints the latest environment data in machine-readable form"""
+    latest = None
+    try:
+        with Pyro4.Proxy('PYRO:' + PYRO_NAME + '@' + PYRO_HOST + ':' + str(PYRO_PORT)) as roomalert:
+            latest = roomalert.last_measurement()
+    except Pyro4.errors.CommunicationError:
+        print('error: unable to communicate with Room Alert daemon')
+        return 1
+
+    print(json.dumps(latest))
+
+    return 0
+
+def print_usage(name):
+    """Prints the utility help"""
+    print('Usage: {} <command>'.format(name))
+    print()
+    print('   status      print a human-readable summary of the Room Alert status')
+    print('   json        print a machine-readable summary of the Room Alert status')
+    print()
+
+    return 1
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        sys.exit(print_usage(SCRIPT_NAME))
+
+    if sys.argv[1] == 'status':
+        sys.exit(print_status())
+    elif sys.argv[1] == 'json':
+        sys.exit(print_json())
+
+    # Command not found
+    sys.exit(print_usage(SCRIPT_NAME))
+

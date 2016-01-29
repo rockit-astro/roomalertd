@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+#
+# This file is part of roomalertd.
+#
+# roomalertd is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# roomalertd is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with roomalertd.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Front end for the RoomAlert monitor for the Warwick one-metre telescope"""
+
+import datetime
+import socket
+import demjson
+import Pyro4
+
+PYRO_HOST = '192.168.0.102'
+PYRO_PORT = 9008
+PYRO_NAME = 'roomalert_daemon'
+
+ROOMALERT_IP = '192.168.0.47'
+ROOMALERT_PORT = 80
+ROOMALERT_QUERY_TIMEOUT = 5
+
+# pylint: disable=broad-except
+# pylint: disable=too-few-public-methods
+# pylint: disable=no-self-use
+
+def query_roomalert_json(hostname, port, timeout):
+    """Query json data from the roomalert"""
+    # The Room Alert omits the HTTP header when returning JSON.
+    # This violates the HTTP spec and prevents us from using the
+    # standard query libraries.  We instead speak HTTP ourselves over a socket.
+    try:
+        sock = socket.create_connection((hostname, port), timeout)
+        sock.sendall('GET /getData.htm HTTP/1.0\n\n'.encode('ascii'))
+
+        data = [sock.recv(4096)]
+        while data[-1]:
+            data.append(sock.recv(4096))
+
+    except Exception as exception:
+        raise Exception('Socket error while querying {}: {}'.format(hostname, str(exception)))
+
+    # The first line will either be the JSON we want, or a raw HTTP header
+    response = ''.join(b.decode('ascii') for b in data)
+
+    if response[0] != '{':
+        raise Exception('Unexpected response from {}: {}'.format(hostname, response))
+
+    # The JSON returned by earlier firmwares omits quotes around the keys
+    # This violates the JSON specification, and is not accepted by the
+    # built-in JSON parser.  demjson accepts this invalid input.
+    return demjson.decode(response)
+
+class RoomAlertDaemon:
+    """Wraps a web request to the RoomAlert and dealing with its malformed responses"""
+    def last_measurement(self):
+        """Query the latest valid measurement.
+        May return None if no data is available"""
+        try:
+            data = query_roomalert_json(ROOMALERT_IP, ROOMALERT_PORT,
+                                        ROOMALERT_QUERY_TIMEOUT)
+
+            date = datetime.datetime.strptime(data['date'], "%m/%d/%y %H:%M:%S")
+            return {
+                'date': date.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'external_temp': float(data['sensor'][0]['tc']),
+                'external_humidity': float(data['sensor'][0]['h']),
+                'internal_temp': float(data['sensor'][1]['tc']),
+                'internal_humidity': float(data['sensor'][1]['h']),
+
+                'roomalert_temp': float(data['internal_sen'][0]['tc']),
+                'roomalert_humidity': float(data['internal_sen'][0]['h']),
+                'truss_temp': float(data['sensor'][2]['tc']),
+                'hatch_closed': bool(data['s_sen'][0]['stat']),
+                'trap_closed': bool(data['s_sen'][1]['stat']),
+            }
+
+        except Exception as exception:
+            print('{} ERROR: failed to query from RoomAlert: {}' \
+                  .format(datetime.datetime.utcnow(), str(exception)))
+            return None
+
+def spawn_daemon():
+    """Spawns the daemon and registers it with Pyro"""
+    Pyro4.config.COMMTIMEOUT = 5
+
+    pyro = Pyro4.Daemon(host=PYRO_HOST, port=PYRO_PORT)
+    roomalert = RoomAlertDaemon()
+    uri = pyro.register(roomalert, objectId=PYRO_NAME)
+
+    print('Starting RoomAlert daemon with Pyro ID:', uri)
+    pyro.requestLoop()
+    print('Stopping RoomAlert daemon with Pyro ID:', uri)
+
+if __name__ == '__main__':
+    spawn_daemon()
