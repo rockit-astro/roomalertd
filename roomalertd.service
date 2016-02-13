@@ -1,6 +1,8 @@
 [Unit]
 Description=Daemon for exposing a Room Alert via Pyro.
 After=syslog.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Restart=on-failure
@@ -9,3 +11,5 @@ ExecStart=/usr/bin/env python3 -u /usr/bin/roomalertd
 StandardOutput=syslog
 StandardError=syslog
 
+[Install]
+WantedBy=multi-user.target

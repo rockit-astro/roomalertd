@@ -1,5 +1,5 @@
 Name:      onemetre-roomalert-server
-Version:   1.0
+Version:   1.2
 Release:   1
 Url:       https://github.com/warwick-one-metre/roomalertd
 Summary:   Room Alert daemon for the Warwick one-metre telescope.
