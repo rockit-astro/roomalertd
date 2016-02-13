@@ -45,8 +45,6 @@ def print_status():
         hatch = 'CLOSED' if latest['hatch_closed'] else 'OPEN'
         trap = 'CLOSED' if latest['trap_closed'] else 'OPEN'
         print('Data received \033[1m{}\033[0m:'.format(date))
-        print('External Temp: \033[1m{} \u2103\033[0m'.format(latest['external_temp']))
-        print('External Hum.: \033[1m{} %RH\033[0m'.format(latest['external_humidity']))
         print('Internal Temp: \033[1m{} \u2103\033[0m'.format(latest['internal_temp']))
         print('Internal Hum.: \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
         print('Rm Alert Temp: \033[1m{} \u2103\033[0m'.format(latest['roomalert_temp']))
