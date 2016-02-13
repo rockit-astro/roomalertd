@@ -29,6 +29,7 @@ PYRO_NAME = 'roomalert_daemon'
 PYRO_COMM_TIMEOUT = 5
 
 SCRIPT_NAME = os.path.basename(sys.argv[0])
+sys.excepthook = Pyro4.util.excepthook
 
 def print_status():
     """Prints the latest environment data in human-readable form"""
