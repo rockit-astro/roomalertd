@@ -22,6 +22,9 @@ import socket
 import demjson
 import Pyro4
 
+# Set automatically when generating RPM package
+SOFTWARE_VERSION = 'UNKNOWN'
+
 PYRO_HOST = '192.168.0.102'
 PYRO_PORT = 9008
 PYRO_NAME = 'roomalert_daemon'
@@ -83,6 +86,7 @@ class RoomAlertDaemon:
                 'truss_temp': float(data['sensor'][2]['tc']),
                 'hatch_closed': bool(data['s_sen'][0]['stat']),
                 'trap_closed': bool(data['s_sen'][1]['stat']),
+                'software_version': SOFTWARE_VERSION
             }
 
         except Exception as exception:
