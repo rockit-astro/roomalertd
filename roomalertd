@@ -105,7 +105,11 @@ class RoomAlertDaemon:
                                         ROOMALERT_QUERY_TIMEOUT)
             dic = {}
             date = datetime.datetime.strptime(data['date'], "%m/%d/%y %H:%M:%S")
-            dic.update({'date' : date.strftime('%Y-%m-%dT%H:%M:%SZ')})
+            dic.update({
+                'date' : date.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'software_version': SOFTWARE_VERSION
+            })
+
             sub_dic = INSTRUMENT_SENSORS[self.instrument]
             for key in sub_dic.keys():
                 t = sub_dic[key]
