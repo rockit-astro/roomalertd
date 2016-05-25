@@ -50,7 +50,8 @@ INSTRUMENT_SENSORS = {
         'roomalert_humidity' : ('internal_sen', 0, 'h', float),
         'truss_temp' : ('sensor', 2, 'tc', float),
         'hatch_closed' : ('s_sen', 0, 'stat', bool),
-        'trap_closed' : ('s_sen', 1, 'stat', bool)
+        'trap_closed' : ('s_sen', 1, 'stat', bool),
+        'security_system_safe' : ('s_sen', 2, 'stat', bool)
     }
 }
 

@@ -1,5 +1,5 @@
 Name:      onemetre-roomalert-client
-Version:   1.6
+Version:   1.7
 Release:   0
 Url:       https://github.com/warwick-one-metre/roomalertd
 Summary:   Room Alert client for the Warwick one-metre telescope.
