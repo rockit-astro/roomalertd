@@ -7,7 +7,7 @@ After=network-online.target
 [Service]
 Restart=on-failure
 Type=simple
-ExecStart=/usr/bin/env python3 -u /usr/bin/roomalertd
+ExecStart=/usr/bin/env python3 -u /usr/bin/roomalertd onemetre
 StandardOutput=syslog
 StandardError=syslog
 
