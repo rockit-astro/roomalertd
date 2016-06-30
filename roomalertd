@@ -22,26 +22,22 @@ import datetime
 import socket
 import demjson
 import Pyro4
+import warwick.observatory as observatory
 
-# Configuration settings for Pyro
-# label : (host_IP, host_port, host_name, sensor_IP)
-PYRO_CONFIG = {
-    'nites'    : ('192.168.0.81', 9008, 'nites_roomalert_daemon', '192.168.0.44'),
-    'onemetre' : ('192.168.0.102', 9008, 'onemetre_roomalert_daemon', '192.168.0.47')
-    }
-
-# Room Alert settings dictionary
-# label : (sensor_class, sensor_class_id, sensor_type_str, return_type)
-INSTRUMENT_SENSORS = {
-    'nites' : {
+# Configuration settings for daemon
+# label : (PyroDaemon, sensor_IP, sensors)
+# sensors: label : (sensor_class, sensor_class_id, sensor_type_str, return_type)
+CONFIG = {
+    'nites' : (observatory.daemons.nites_roomalert, '192.168.0.44', {
         'internal_temperature' : ('sensor', 0, 'tempc', float),
         'internal_humidity' : ('sensor', 0, 'humid', float),
         'rack_temperature' : ('sensor', 2, 'tempc', float),
         'rack_humidity' : ('sensor', 2, 'humid', float),
         'security_system' : ('switch_sen', 7, 'status', bool),
         'mains_power' : ('switch_sen', 0, 'status', bool)
-        },
-    'onemetre' : {
+    }),
+
+    'onemetre' : (observatory.daemons.onemetre_roomalert, '192.168.0.47', {
         'internal_temp' : ('sensor', 1, 'tc', float),
         'internal_humidity' : ('sensor', 1, 'h', float),
         'external_temp' : ('sensor', 0, 'tc', float),
@@ -52,7 +48,7 @@ INSTRUMENT_SENSORS = {
         'hatch_closed' : ('s_sen', 0, 'stat', bool),
         'trap_closed' : ('s_sen', 1, 'stat', bool),
         'security_system_safe' : ('s_sen', 2, 'stat', bool)
-    }
+    })
 }
 
 ROOMALERT_PORT = 80
@@ -94,16 +90,18 @@ def query_roomalert_json(hostname, port, timeout):
 
 class RoomAlertDaemon:
     """Wraps a web request to the RoomAlert and dealing with its malformed responses"""
-    def __init__(self, instrument):
+    def __init__(self, name, ip, sensors):
         """Set which Room Alert to query"""
-        self.instrument = instrument
+        self._name = name
+        self._ip = ip
+        self._sensors = sensors
 
+    @Pyro4.expose
     def last_measurement(self):
         """Query the latest valid measurement.
         May return None if no data is available"""
         try:
-            data = query_roomalert_json(PYRO_CONFIG[self.instrument][3], ROOMALERT_PORT,
-                                        ROOMALERT_QUERY_TIMEOUT)
+            data = query_roomalert_json(self._ip, ROOMALERT_PORT, ROOMALERT_QUERY_TIMEOUT)
             dic = {}
             date = datetime.datetime.strptime(data['date'], "%m/%d/%y %H:%M:%S")
             dic.update({
@@ -111,33 +109,22 @@ class RoomAlertDaemon:
                 'software_version': SOFTWARE_VERSION
             })
 
-            sub_dic = INSTRUMENT_SENSORS[self.instrument]
-            for key in sub_dic.keys():
-                t = sub_dic[key]
+            for key in self._sensors:
+                t = self._sensors[key]
                 dic.update({key : t[-1](data[t[0]][t[1]][t[2]])})
             return dic
 
         except Exception as exception:
             print('{} ERROR: failed to query from RoomAlert: {}' \
                   .format(datetime.datetime.utcnow(), str(exception)))
+            observatory.log.error(self._name, 'Failed to read roomalert (' + str(exception) + ')')
             return None
-
-def spawn_daemon(instrument):
-    """Spawns the daemon and registers it with Pyro"""
-    Pyro4.config.COMMTIMEOUT = 5
-    pyro = Pyro4.Daemon(host=PYRO_CONFIG[instrument][0],
-                        port=PYRO_CONFIG[instrument][1])
-    roomalert = RoomAlertDaemon(instrument)
-    uri = pyro.register(roomalert, objectId=PYRO_CONFIG[instrument][2])
-
-    print('Starting RoomAlert daemon with Pyro ID:', uri)
-    pyro.requestLoop()
-    print('Stopping RoomAlert daemon with Pyro ID:', uri)
 
 if __name__ == '__main__':
     description = 'Room Alert Server'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('instrument', choices=['onemetre', 'nites'], help='Select an instrument')
     args = parser.parse_args()
-    spawn_daemon(args.instrument)
+    config = CONFIG[args.instrument]
+    config[0].launch(RoomAlertDaemon(args.instrument + '_roomalertd', config[1], config[2]))
 
