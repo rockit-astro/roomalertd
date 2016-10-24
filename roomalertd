@@ -40,8 +40,6 @@ CONFIG = {
     'onemetre' : (observatory.daemons.onemetre_roomalert, '192.168.0.47', {
         'internal_temp' : ('sensor', 1, 'tc', float),
         'internal_humidity' : ('sensor', 1, 'h', float),
-        'external_temp' : ('sensor', 0, 'tc', float),
-        'external_humidity' : ('sensor', 0, 'h', float),
         'roomalert_temp' : ('internal_sen', 0, 'tc', float),
         'roomalert_humidity' : ('internal_sen', 0, 'h', float),
         'truss_temp' : ('sensor', 2, 'tc', float),
