@@ -19,16 +19,18 @@
 
 import argparse
 import datetime
+import json
 import socket
+import urllib.request
 import demjson
 import Pyro4
 import warwick.observatory as observatory
 
 # Configuration settings for daemon
-# label : (PyroDaemon, sensor_IP, sensors)
+# label : (PyroDaemon, sensor_ip, is_legacy_device, sensors)
 # sensors: label : (sensor_class, sensor_class_id, sensor_type_str, return_type)
 CONFIG = {
-    'nites' : (observatory.daemons.nites_roomalert, '192.168.0.44', {
+    'nites' : (observatory.daemons.nites_roomalert, '192.168.0.44', True, {
         'internal_temperature' : ('sensor', 0, 'tempc', float),
         'internal_humidity' : ('sensor', 0, 'humid', float),
         'rack_temperature' : ('sensor', 2, 'tempc', float),
@@ -37,7 +39,7 @@ CONFIG = {
         'mains_power' : ('switch_sen', 0, 'status', bool)
     }),
 
-    'onemetre' : (observatory.daemons.onemetre_roomalert, '192.168.0.47', {
+    'onemetre' : (observatory.daemons.onemetre_roomalert, '192.168.0.47', False, {
         'internal_temp' : ('sensor', 1, 'tc', float),
         'internal_humidity' : ('sensor', 1, 'h', float),
         'roomalert_temp' : ('internal_sen', 0, 'tc', float),
@@ -59,8 +61,8 @@ SOFTWARE_VERSION = 'UNKNOWN'
 # pylint: disable=too-few-public-methods
 # pylint: disable=invalid-name
 
-def query_roomalert_json(hostname, port, timeout):
-    """Query json data from the roomalert"""
+def query_legacy_roomalert(hostname, port, timeout):
+    """Query json data from older roomalert versions that violate HTTP/JSON standards"""
     # The Room Alert omits the HTTP header when returning JSON.
     # This violates the HTTP spec and prevents us from using the
     # standard query libraries.  We instead speak HTTP ourselves over a socket.
@@ -86,20 +88,33 @@ def query_roomalert_json(hostname, port, timeout):
     # built-in JSON parser.  demjson accepts this invalid input.
     return demjson.decode(response)
 
+def query_modern_roomalert(hostname, port, timeout):
+    """Query json data from newer roomalert versions that support proper HTTP/JSON standards"""
+    try:
+        url = 'http://' + hostname + ':' + str(port) + '/getData.json'
+        with urllib.request.urlopen(url, None, timeout) as response:
+            response = response.read().decode('ascii')
+        return json.loads(response)
+
+    except Exception as exception:
+        raise Exception('Socket error while querying {}: {}'.format(hostname, str(exception)))
+
 class RoomAlertDaemon:
     """Wraps a web request to the RoomAlert and dealing with its malformed responses"""
-    def __init__(self, name, ip, sensors):
+    def __init__(self, name, config):
         """Set which Room Alert to query"""
         self._name = name
-        self._ip = ip
-        self._sensors = sensors
+        self._ip = config[1]
+        self._query_data = query_legacy_roomalert if config[2] else query_modern_roomalert
+        self._sensors = config[3]
 
     @Pyro4.expose
     def last_measurement(self):
         """Query the latest valid measurement.
         May return None if no data is available"""
         try:
-            data = query_roomalert_json(self._ip, ROOMALERT_PORT, ROOMALERT_QUERY_TIMEOUT)
+            data = self._query_data(self._ip, ROOMALERT_PORT, ROOMALERT_QUERY_TIMEOUT)
+
             dic = {}
             date = datetime.datetime.strptime(data['date'], "%m/%d/%y %H:%M:%S")
             dic.update({
@@ -121,8 +136,8 @@ class RoomAlertDaemon:
 if __name__ == '__main__':
     description = 'Room Alert Server'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('instrument', choices=['onemetre', 'nites'], help='Select an instrument')
+    parser.add_argument('instrument', choices=CONFIG.keys(), help='Select an instrument')
     args = parser.parse_args()
     config = CONFIG[args.instrument]
-    config[0].launch(RoomAlertDaemon(args.instrument + '_roomalertd', config[1], config[2]))
+    config[0].launch(RoomAlertDaemon(args.instrument + '_roomalertd', config))
 
