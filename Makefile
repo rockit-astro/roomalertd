@@ -13,6 +13,7 @@ all:
 	awk '{sub("SOFTWARE_VERSION = .*$$","SOFTWARE_VERSION = \"$(SERVER_VERSION) ($(GIT_VERSION))\""); print $0}' roomalertd.bak > roomalertd
 	${RPMBUILD} -ba roomalert-server.spec
 	${RPMBUILD} -ba roomalert-client.spec
+	${RPMBUILD} -ba goto-roomalert-server.spec
 	mv build/noarch/*.rpm .
 	rm -rf build
 	mv roomalertd.bak roomalertd
