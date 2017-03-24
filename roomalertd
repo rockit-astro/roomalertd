@@ -30,7 +30,7 @@ import warwick.observatory as observatory
 # label : (PyroDaemon, sensor_ip, is_legacy_device, sensors)
 # sensors: label : (sensor_class, sensor_class_id, sensor_type_str, return_type)
 CONFIG = {
-    'nites' : (observatory.daemons.nites_roomalert, '192.168.0.44', True, {
+    'nites' : (observatory.daemons.nites_roomalert, '10.2.6.187', True, {
         'internal_temperature' : ('sensor', 0, 'tempc', float),
         'internal_humidity' : ('sensor', 0, 'humid', float),
         'rack_temperature' : ('sensor', 2, 'tempc', float),
@@ -39,7 +39,7 @@ CONFIG = {
         'mains_power' : ('switch_sen', 0, 'status', bool)
     }),
 
-    'onemetre' : (observatory.daemons.onemetre_roomalert, '192.168.0.47', False, {
+    'onemetre' : (observatory.daemons.onemetre_roomalert, '10.2.6.209', False, {
         'internal_temp' : ('sensor', 1, 'tc', float),
         'internal_humidity' : ('sensor', 1, 'h', float),
         'roomalert_temp' : ('internal_sen', 0, 'tc', float),
