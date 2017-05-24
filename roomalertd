@@ -125,7 +125,9 @@ class RoomAlertDaemon:
             dic = {}
             date = datetime.datetime.strptime(data['date'], "%m/%d/%y %H:%M:%S")
             dic.update({
-                'date' : date.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                # The roomalert reported date may be grossly wrong, so default to the current time
+                'date': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'roomalert_date': date.strftime('%Y-%m-%dT%H:%M:%SZ'),
                 'software_version': SOFTWARE_VERSION
             })
 
