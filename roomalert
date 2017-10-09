@@ -22,7 +22,7 @@ import json
 import os
 import sys
 import Pyro4
-import warwick.observatory as observatory
+from warwick.observatory.common import daemons
 
 SCRIPT_NAME = os.path.basename(sys.argv[0])
 sys.excepthook = Pyro4.util.excepthook
@@ -31,7 +31,7 @@ def print_status():
     """Prints the latest environment data in human-readable form"""
     latest = None
     try:
-        with observatory.daemons.onemetre_roomalert.connect() as roomalert:
+        with daemons.onemetre_roomalert.connect() as roomalert:
             latest = roomalert.last_measurement()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
@@ -61,7 +61,7 @@ def print_json():
     """Prints the latest environment data in machine-readable form"""
     latest = None
     try:
-        with observatory.daemons.onemetre_roomalert.connect() as roomalert:
+        with daemons.onemetre_roomalert.connect() as roomalert:
             latest = roomalert.last_measurement()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
@@ -92,4 +92,3 @@ if __name__ == '__main__':
 
     # Command not found
     sys.exit(print_usage(SCRIPT_NAME))
-

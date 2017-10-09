@@ -24,13 +24,13 @@ import socket
 import urllib.request
 import demjson
 import Pyro4
-import warwick.observatory as observatory
+from warwick.observatory.common import daemons, log
 
 # Configuration settings for daemon
 # label : (PyroDaemon, sensor_ip, is_legacy_device, sensors)
 # sensors: label : (sensor_class, sensor_class_id, sensor_type_str, return_type)
 CONFIG = {
-    'nites' : (observatory.daemons.nites_roomalert, '10.2.6.187', True, {
+    'nites' : (daemons.nites_roomalert, '10.2.6.187', True, {
         'internal_temperature' : ('sensor', 0, 'tempc', float),
         'internal_humidity' : ('sensor', 0, 'humid', float),
         'rack_temperature' : ('sensor', 2, 'tempc', float),
@@ -39,7 +39,7 @@ CONFIG = {
         'mains_power' : ('switch_sen', 0, 'status', bool)
     }),
 
-    'onemetre' : (observatory.daemons.onemetre_roomalert, '10.2.6.209', False, {
+    'onemetre' : (daemons.onemetre_roomalert, '10.2.6.209', False, {
         'internal_temp' : ('sensor', 1, 'tc', float),
         'internal_humidity' : ('sensor', 1, 'h', float),
         'roomalert_temp' : ('internal_sen', 0, 'tc', float),
@@ -50,7 +50,7 @@ CONFIG = {
         'security_system_safe' : ('s_sen', 2, 'stat', bool)
     }),
 
-    'goto' : (observatory.daemons.goto_roomalert, '10.2.6.5', False, {
+    'goto' : (daemons.goto_roomalert, '10.2.6.5', False, {
         'internal_temp' : ('sensor', 0, 'tc', float),
         'internal_humidity' : ('sensor', 0, 'h', float),
         'roomalert_temp' : ('internal_sen', 0, 'tc', float),
@@ -139,7 +139,7 @@ class RoomAlertDaemon:
         except Exception as exception:
             print('{} ERROR: failed to query from RoomAlert: {}' \
                   .format(datetime.datetime.utcnow(), str(exception)))
-            observatory.log.error(self._name, 'Failed to read roomalert (' + str(exception) + ')')
+            log.error(self._name, 'Failed to read roomalert (' + str(exception) + ')')
             return None
 
 if __name__ == '__main__':
@@ -147,6 +147,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('instrument', choices=CONFIG.keys(), help='Select an instrument')
     args = parser.parse_args()
-    config = CONFIG[args.instrument]
-    config[0].launch(RoomAlertDaemon(args.instrument + '_roomalertd', config))
-
+    roomalert = CONFIG[args.instrument]
+    roomalert[0].launch(RoomAlertDaemon(args.instrument + '_roomalertd', roomalert))

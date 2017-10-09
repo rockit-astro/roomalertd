@@ -1,13 +1,17 @@
 Name:      onemetre-roomalert-client
-Version:   1.8
-Release:   1
+Version:   2.0
+Release:   0
 Url:       https://github.com/warwick-one-metre/roomalertd
 Summary:   Room Alert client for the Warwick one-metre telescope.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
-Requires:  python3, python3-Pyro4, python3-warwickobservatory
-
+%if 0%{?suse_version}
+Requires:  python3, python3-Pyro4, python3-warwick-observatory-common
+%endif
+%if 0%{?centos_ver}
+Requires:  python34, python34-Pyro4, python34-warwick-observatory-common
+%endif
 %description
 Part of the observatory software for the Warwick one-meter telescope.
 
