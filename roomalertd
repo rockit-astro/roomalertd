@@ -113,6 +113,7 @@ class RoomAlertDaemon:
         self._name = name
         self._ip = config[1]
         self._query_data = query_legacy_roomalert if config[2] else query_modern_roomalert
+        self._query_failed = False
         self._sensors = config[3]
 
     @Pyro4.expose
@@ -134,12 +135,21 @@ class RoomAlertDaemon:
             for key in self._sensors:
                 t = self._sensors[key]
                 dic.update({key : t[-1](data[t[0]][t[1]][t[2]])})
+
+            if self._query_failed:
+                log.info(self._name, 'Restored contact with Room Alert')
+                self._query_failed = False
+
             return dic
 
         except Exception as exception:
             print('{} ERROR: failed to query from RoomAlert: {}' \
                   .format(datetime.datetime.utcnow(), str(exception)))
-            log.error(self._name, 'Failed to read roomalert (' + str(exception) + ')')
+
+            if not self._query_failed:
+                log.error(self._name, 'Lost contact with Room Alert')
+
+            self._query_failed = True
             return None
 
 if __name__ == '__main__':
