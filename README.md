@@ -22,6 +22,12 @@ The service will automatically start on system boot, or you can start it immedia
 sudo systemctl start roomalertd.service
 ```
 
+Finally, open a port in the firewall so that other machines on the network can access the daemon:
+```
+sudo firewall-cmd --zone=public --add-port=9008/tcp --permanent
+sudo firewall-cmd --reload
+```
+
 ### Software Setup (GOTO)
 
 After installing `goto-roomalert-server`, the `goto-roomalertd` must be enabled using:
@@ -32,6 +38,12 @@ sudo systemctl enable goto-roomalertd.service
 The service will automatically start on system boot, or you can start it immediately using:
 ```
 sudo systemctl start goto-roomalertd.service
+```
+
+Finally, open a port in the firewall so that other machines on the network can access the daemon:
+```
+sudo firewall-cmd --zone=public --add-port=9020/tcp --permanent
+sudo firewall-cmd --reload
 ```
 
 ### Hardware Setup
