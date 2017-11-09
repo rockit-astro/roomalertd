@@ -1,9 +1,19 @@
 _roomalert()
 {
-    local cur opts
+    compopt +o default
+    local cur prev opts
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
-    opts="status json"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="onemetre goto nites"
+
+    case "${prev}" in
+        onemetre|goto|nites)
+            opts="status json"
+            ;;
+        *)
+            ;;
+    esac
 
     COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
     return 0

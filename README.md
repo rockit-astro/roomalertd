@@ -4,7 +4,7 @@ Part of the observatory software for the Warwick one-meter, NITES, and GOTO tele
 
 `roomalertd` is a Pyro proxy for querying the Room Alert via http.
 
-`roomalert` is a commandline utility that queries the W1m Room Alert daemon.
+`roomalert` is a commandline utility that queries the onemetre/GOTO/NITES Room Alert daemons.
 
 `roomalertsim.py` (not packaged in a RPM) is a test script that emulates the W1m Room Alert as a legacy-style device.
 
@@ -30,7 +30,7 @@ sudo firewall-cmd --reload
 
 ### Software Setup (GOTO)
 
-After installing `goto-roomalert-server`, the `goto-roomalertd` must be enabled using:
+After installing `goto-roomalert-server`, the `roomalertd` must be enabled using:
 ```
 sudo systemctl enable goto-roomalertd.service
 ```

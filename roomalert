@@ -27,11 +27,27 @@ from warwick.observatory.common import daemons
 SCRIPT_NAME = os.path.basename(sys.argv[0])
 sys.excepthook = Pyro4.util.excepthook
 
-def print_status():
+DAEMONS = {
+    'onemetre': daemons.onemetre_roomalert,
+    'goto': daemons.goto_roomalert,
+    'nites': daemons.nites_roomalert
+}
+
+def run_command(daemon, command):
+    """Prints the message associated with a status code and returns the code"""
+    try:
+        ret = command(daemon)
+    except Pyro4.errors.CommunicationError:
+        print('error: unable to communicate with the Room Alert daemon')
+        ret = 1
+
+    return ret
+
+def print_status(daemon):
     """Prints the latest environment data in human-readable form"""
     latest = None
     try:
-        with daemons.onemetre_roomalert.connect() as roomalert:
+        with daemon.connect() as roomalert:
             latest = roomalert.last_measurement()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
@@ -39,29 +55,43 @@ def print_status():
 
     if latest is not None:
         date = datetime.datetime.strptime(latest['date'], '%Y-%m-%dT%H:%M:%SZ')
-        hatch = 'CLOSED' if latest['hatch_closed'] else 'OPEN'
-        trap = 'CLOSED' if latest['trap_closed'] else 'OPEN'
-        security_system = 'SAFE' if latest['security_system_safe'] else 'TRIPPED'
         print('Data received \033[1m{}\033[0m:'.format(date))
-        print('Internal Temp: \033[1m{} \u2103\033[0m'.format(latest['internal_temp']))
-        print('Internal Hum.: \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
-        print('Rm Alert Temp: \033[1m{} \u2103\033[0m'.format(latest['roomalert_temp']))
-        print('Rm Alert Hum.: \033[1m{} %RH\033[0m'.format(latest['roomalert_humidity']))
-        print('   Truss Temp: \033[1m{} \u2103\033[0m'.format(latest['truss_temp']))
-        print('   Side Hatch: \033[1m{}\033[0m'.format(hatch))
-        print('    Trap Door: \033[1m{}\033[0m'.format(trap))
-        print('Tel. Sec. Sys: \033[1m{}\033[0m'.format(security_system))
+
+        if daemon in [daemons.onemetre_roomalert, daemons.goto_roomalert]:
+            print('Internal Temp: \033[1m{} \u2103\033[0m'.format(latest['internal_temp']))
+            print('Internal Hum.: \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
+            print('Rm Alert Temp: \033[1m{} \u2103\033[0m'.format(latest['roomalert_temp']))
+            print('Rm Alert Hum.: \033[1m{} %RH\033[0m'.format(latest['roomalert_humidity']))
+
+        if daemon == daemons.onemetre_roomalert:
+            hatch = 'CLOSED' if latest['hatch_closed'] else 'OPEN'
+            trap = 'CLOSED' if latest['trap_closed'] else 'OPEN'
+            security_system = 'SAFE' if latest['security_system_safe'] else 'TRIPPED'
+            print('   Truss Temp: \033[1m{} \u2103\033[0m'.format(latest['truss_temp']))
+            print('   Side Hatch: \033[1m{}\033[0m'.format(hatch))
+            print('    Trap Door: \033[1m{}\033[0m'.format(trap))
+            print('Tel. Sec. Sys: \033[1m{}\033[0m'.format(security_system))
+
+        if daemon == daemons.nites_roomalert:
+            security_system = 'SAFE' if latest['security_system'] else 'TRIPPED'
+            mains_power = 'ONLINE' if latest['mains_power'] else 'OFFLINE'
+            print('Internal Temp: \033[1m{} \u2103\033[0m'.format(latest['internal_temperature']))
+            print('Internal Hum.: \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
+            print('    Rack Temp: \033[1m{} \u2103\033[0m'.format(latest['rack_temperature']))
+            print('    Rack Hum.: \033[1m{} %RH\033[0m'.format(latest['rack_humidity']))
+            print('Tel. Sec. Sys: \033[1m{}\033[0m'.format(security_system))
+            print('  Mains Power: \033[1m{}\033[0m'.format(mains_power))
         print()
     else:
         print('error: failed to query data')
 
     return 0
 
-def print_json():
+def print_json(daemon):
     """Prints the latest environment data in machine-readable form"""
     latest = None
     try:
-        with daemons.onemetre_roomalert.connect() as roomalert:
+        with daemon.connect() as roomalert:
             latest = roomalert.last_measurement()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
@@ -71,9 +101,9 @@ def print_json():
 
     return 0
 
-def print_usage(name):
+def print_usage():
     """Prints the utility help"""
-    print('Usage: {} <command>'.format(name))
+    print('Usage: {} [onemetre|goto|nites] <command>'.format(SCRIPT_NAME))
     print()
     print('   status      print a human-readable summary of the Room Alert status')
     print('   json        print a machine-readable summary of the Room Alert status')
@@ -82,13 +112,15 @@ def print_usage(name):
     return 1
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        sys.exit(print_usage(SCRIPT_NAME))
+    if len(sys.argv) < 3:
+        sys.exit(print_usage())
 
-    if sys.argv[1] == 'status':
-        sys.exit(print_status())
-    elif sys.argv[1] == 'json':
-        sys.exit(print_json())
+    commands = {
+        'status': print_status,
+        'json': print_json,
+    }
 
-    # Command not found
-    sys.exit(print_usage(SCRIPT_NAME))
+    if sys.argv[1] not in DAEMONS or sys.argv[2] not in commands:
+        sys.exit(print_usage())
+
+    sys.exit(run_command(DAEMONS[sys.argv[1]], commands[sys.argv[2]]))
