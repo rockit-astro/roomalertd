@@ -5,7 +5,7 @@ _roomalert()
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="onemetre goto nites"
+    opts="onemetre goto nites swasp"
 
     case "${prev}" in
         onemetre|goto|nites)

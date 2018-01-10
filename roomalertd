@@ -39,6 +39,19 @@ CONFIG = {
         'mains_power' : ('switch_sen', 0, 'status', bool)
     }),
 
+    'swasp' : (daemons.superwasp_roomalert, '192.168.0.46', True, {
+        'roomalert_temp' : ('sensor', 0, 'tempc', float),
+        'roomalert_humidity' : ('sensor', 0, 'humid', float),
+        'rack_temp' : ('sensor', 1, 'tempc', float),
+        'rack_humidity' : ('sensor', 1, 'humid', float),
+        'cam_rack_temp' : ('sensor', 2, 'tempc', float),
+        'comp_room_temp' : ('sensor', 3, 'tempc', float),
+        'comp_room_humidity' : ('sensor', 3, 'humid', float),
+        'aircon_no_airflow' : ('switch_sen', 0, 'status', bool),
+        'roof_closed' : ('switch_sen', 1, 'status', bool),
+        'roof_power' : ('switch_sen', 2, 'status', bool)
+    }),
+
     'onemetre' : (daemons.onemetre_roomalert, '10.2.6.209', False, {
         'internal_temp' : ('sensor', 1, 'tc', float),
         'internal_humidity' : ('sensor', 1, 'h', float),
