@@ -28,24 +28,28 @@ sudo firewall-cmd --zone=public --add-port=9008/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
-### Software Setup (GOTO)
+### Software Setup (GOTO and SuperWASP)
 
-After installing `goto-roomalert-server`, the `roomalertd` must be enabled using:
+Both the GOTO and SuperWASP roomalert daemons run on the same server.
+After installing `goto-roomalert-server`, the `roomalertd`s must be enabled using:
 ```
 sudo systemctl enable goto-roomalertd.service
+sudo systemctl enable superwasp-roomalertd.service
 ```
 
-The service will automatically start on system boot, or you can start it immediately using:
+The services will automatically start on system boot, or you can start them immediately using:
 ```
 sudo systemctl start goto-roomalertd.service
+sudo systemctl start superwasp-roomalertd.service
 ```
 
 Finally, open a port in the firewall so that other machines on the network can access the daemon:
 ```
 sudo firewall-cmd --zone=public --add-port=9020/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=9023/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
 ### Hardware Setup
 
-The IPs for the Room Alert units are hardcoded in `powerd`.
+The IPs for the Room Alert units are hardcoded in `roomalertd`.
