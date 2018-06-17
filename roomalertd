@@ -64,8 +64,10 @@ CONFIG = {
     }),
 
     'goto' : (daemons.goto_roomalert, '10.2.6.5', False, {
-        'internal_temp' : ('sensor', 0, 'tc', float),
-        'internal_humidity' : ('sensor', 0, 'h', float),
+        'internal_temp' : ('sensor', 1, 'tc', float),
+        'internal_humidity' : ('sensor', 1, 'h', float),
+        'dome2_internal_temp' : ('sensor', 0, 'tc', float),
+        'dome2_internal_humidity' : ('sensor', 0, 'h', float),
         'roomalert_temp' : ('internal_sen', 0, 'tc', float),
         'roomalert_humidity' : ('internal_sen', 0, 'h', float),
     })
