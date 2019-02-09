@@ -7,9 +7,9 @@ After=network-online.target
 [Service]
 Restart=on-failure
 Type=simple
-ExecStart=/usr/bin/env python3.4 -u /usr/bin/roomalertd goto
-ExecStartPost=/usr/bin/env python3.4 -u /usr/bin/obslog info goto_roomalertd Started by systemd
-ExecStopPost=/usr/bin/env python3.4 -u /usr/bin/obslog info goto_roomalertd Stopped by systemd
+ExecStart=/usr/bin/env python3.6 -u /usr/bin/roomalertd goto
+ExecStartPost=/usr/bin/env python3.6 -u /usr/bin/obslog info goto_roomalertd Started by systemd
+ExecStopPost=/usr/bin/env python3.6 -u /usr/bin/obslog info goto_roomalertd Stopped by systemd
 StandardOutput=syslog
 StandardError=syslog
 

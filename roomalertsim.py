@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 #
-# This file is part of opsd.
+# This file is part of roomalertd.
 #
 # roomalertd is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
