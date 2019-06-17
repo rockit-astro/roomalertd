@@ -21,6 +21,8 @@ import argparse
 import datetime
 import json
 import socket
+import sys
+import traceback
 import urllib.request
 import demjson
 import Pyro4
@@ -157,9 +159,9 @@ class RoomAlertDaemon:
 
             return dic
 
-        except Exception as exception:
-            print('{} ERROR: failed to query from RoomAlert: {}' \
-                  .format(datetime.datetime.utcnow(), str(exception)))
+        except Exception:
+            print('{} ERROR: failed to query from RoomAlert:'.format(datetime.datetime.utcnow()))
+            traceback.print_exc(file=sys.stdout)
 
             if not self._query_failed:
                 log.error(self._name, 'Lost contact with Room Alert')
