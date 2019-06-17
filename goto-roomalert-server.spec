@@ -1,5 +1,5 @@
 Name:      goto-roomalert-server
-Version:   2.2.0
+Version:   2.2.1
 Release:   0
 Url:       https://github.com/warwick-one-metre/roomalertd
 Summary:   Room Alert daemon for the Warwick one-metre telescope.
