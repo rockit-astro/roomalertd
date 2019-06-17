@@ -85,6 +85,7 @@ SOFTWARE_VERSION = 'UNKNOWN'
 # pylint: disable=too-few-public-methods
 # pylint: disable=invalid-name
 
+
 def query_legacy_roomalert(hostname, port, timeout):
     """Query json data from older roomalert versions that violate HTTP/JSON standards"""
     # The Room Alert omits the HTTP header when returning JSON.
@@ -110,8 +111,9 @@ def query_legacy_roomalert(hostname, port, timeout):
 
     # The JSON returned by earlier firmwares omits quotes around the keys
     # This violates the JSON specification, and is not accepted by the
-    # built-in JSON parser.  demjson accepts this invalid input.
+    # built-in JSON parser. demjson accepts this invalid input.
     return demjson.decode(response)
+
 
 def query_modern_roomalert(hostname, port, timeout):
     """Query json data from newer roomalert versions that support proper HTTP/JSON standards"""
@@ -123,6 +125,7 @@ def query_modern_roomalert(hostname, port, timeout):
 
     except Exception as exception:
         raise Exception('Socket error while querying {}: {}'.format(hostname, str(exception)))
+
 
 class RoomAlertDaemon:
     """Wraps a web request to the RoomAlert and dealing with its malformed responses"""
@@ -169,6 +172,7 @@ class RoomAlertDaemon:
 
             self._query_failed = True
             return None
+
 
 if __name__ == '__main__':
     description = 'Room Alert Server'
