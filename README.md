@@ -52,4 +52,4 @@ sudo firewall-cmd --reload
 
 ### Hardware Setup
 
-The IPs for the Room Alert units are hardcoded in `roomalertd`.
+The IPs and sensors to expose in each daemon are defined in the matching json files.

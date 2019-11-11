@@ -7,7 +7,7 @@ After=network-online.target
 [Service]
 Restart=on-failure
 Type=simple
-ExecStart=/usr/bin/env python3.6 -u /usr/bin/roomalertd onemetre
+ExecStart=/usr/bin/env python3.6 -u /usr/bin/roomalertd /etc/roomalertd/onemetre.json
 ExecStartPost=/usr/bin/env python3.6 -u /usr/bin/obslog info onemetre_roomalertd Started by systemd
 ExecStopPost=/usr/bin/env python3.6 -u /usr/bin/obslog info onemetre_roomalertd Stopped by systemd
 StandardOutput=syslog

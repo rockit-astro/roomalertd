@@ -1,0 +1,91 @@
+{
+  "daemon": "superwasp_roomalert",
+  "log_name": "swasp_roomalertd",
+  "query_ratelimit": 5,
+  "roomalert_ip": "192.168.0.46",
+  "roomalert_port": 80,
+  "roomalert_query_timeout": 5,
+  "roomalert_legacy_api": true,
+  "sensors": [
+    {
+      "id": "comp_room_temp",
+      "label": "Comp Rm Temp",
+      "units": "\u00B0C",
+      "type": "digital",
+      "index": 3,
+      "key": "tempc"
+    },
+    {
+      "id": "comp_room_humidity",
+      "label": "Comp Rm Hum.",
+      "units": "%RH",
+      "type": "digital",
+      "index": 3,
+      "key": "humid"
+    },
+    {
+      "id": "rack_temp",
+      "label": "Rack Temp",
+      "units": "\u00B0C",
+      "type": "digital",
+      "index": 1,
+      "key": "tempc"
+    },
+    {
+      "id": "rack_humidity",
+      "label": "Rack Hum.",
+      "units": "%RH",
+      "type": "digital",
+      "index": 1,
+      "key": "humid"
+    },
+    {
+      "id": "roomalert_temp",
+      "label": "Rm Alert Temp",
+      "units": "\u00B0C",
+      "type": "digital",
+      "index": 0,
+      "key": "tempc"
+    },
+    {
+      "id": "roomalert_humidity",
+      "label": "Rm Alert Hum.",
+      "units": "%RH",
+      "type": "digital",
+      "index": 0,
+      "key": "humid"
+    },
+    {
+      "id": "cam_rack_temp",
+      "label": "Cam Rack Temp",
+      "units": "\u00B0C",
+      "type": "digital",
+      "index": 2,
+      "key": "tempc"
+    },
+    {
+      "id": "aircon_no_airflow",
+      "label": "Air Con",
+      "values": ["ACTIVE", "INACTIVE"],
+      "type": "switch",
+      "index": 0,
+      "key": "status"
+    },
+    {
+      "id": "roof_closed",
+      "label": "Roof",
+      "values": ["OPEN", "CLOSED"],
+      "type": "switch",
+      "index": 1,
+      "key": "status"
+    },
+    {
+      "id": "roof_power",
+      "label": "Roof Power",
+      "values": ["OFF", "ON"],
+      "type": "switch",
+      "index": 2,
+      "key": "status"
+    }
+  ]
+}

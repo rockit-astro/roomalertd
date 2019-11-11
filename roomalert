@@ -34,6 +34,7 @@ DAEMONS = {
     'swasp': daemons.superwasp_roomalert
 }
 
+
 def run_command(daemon, command):
     """Prints the message associated with a status code and returns the code"""
     try:
@@ -44,73 +45,43 @@ def run_command(daemon, command):
 
     return ret
 
+
 def print_status(daemon):
     """Prints the latest environment data in human-readable form"""
     latest = None
     try:
         with daemon.connect() as roomalert:
             latest = roomalert.last_measurement()
+            sensors = roomalert.measurement_sensors()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
         return 1
 
-    if latest is not None:
+    if latest is not None and sensors is not None:
         date = datetime.datetime.strptime(latest['date'], '%Y-%m-%dT%H:%M:%SZ')
         print('Data received \033[1m{}\033[0m:'.format(date))
 
-        if daemon == daemons.onemetre_roomalert:
-            print('Internal Temp: \033[1m{} \u00B0C\033[0m'.format(latest['internal_temp']))
-            print('Internal Hum.: \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
-            print('Rm Alert Temp: \033[1m{} \u00B0C\033[0m'.format(latest['roomalert_temp']))
-            print('Rm Alert Hum.: \033[1m{} %RH\033[0m'.format(latest['roomalert_humidity']))
+        # Find the longest label to set the parameter indent
+        max_label_length = 0
+        for s in sensors.values():
+            max_label_length = max(max_label_length, len(s['label']))
 
-        if daemon == daemons.goto_roomalert:
-            print('Internal Temp (D1): \033[1m{} \u00B0C\033[0m'.format(latest['internal_temp']))
-            print('Internal Hum. (D1): \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
-            print('Internal Temp (D2): \033[1m{} \u00B0C\033[0m'.format(latest['dome2_internal_temp']))
-            print('Internal Hum. (D2): \033[1m{} %RH\033[0m'.format(latest['dome2_internal_humidity']))
-            print('Rm Alert Temp: \033[1m{} \u00B0C\033[0m'.format(latest['roomalert_temp']))
-            print('Rm Alert Hum.: \033[1m{} %RH\033[0m'.format(latest['roomalert_humidity']))
+        for key, s in sensors.items():
+            label_padding = max_label_length - len(s['label'])
+            line = ' ' * label_padding + s['label'] + ': \033[1m'
 
-        if daemon == daemons.onemetre_roomalert:
-            hatch = 'CLOSED' if latest['hatch_closed'] else 'OPEN'
-            trap = 'CLOSED' if latest['trap_closed'] else 'OPEN'
-            security_system = 'SAFE' if latest['security_system_safe'] else 'TRIPPED'
-            print('   Truss Temp: \033[1m{} \u00B0C\033[0m'.format(latest['truss_temp']))
-            print('   Side Hatch: \033[1m{}\033[0m'.format(hatch))
-            print('    Trap Door: \033[1m{}\033[0m'.format(trap))
-            print('Tel. Sec. Sys: \033[1m{}\033[0m'.format(security_system))
-
-        if daemon == daemons.nites_roomalert:
-            security_system = 'SAFE' if latest['security_system'] else 'TRIPPED'
-            mains_power = 'ONLINE' if latest['mains_power'] else 'OFFLINE'
-            print('Internal Temp: \033[1m{} \u00B0C\033[0m'.format(latest['internal_temperature']))
-            print('Internal Hum.: \033[1m{} %RH\033[0m'.format(latest['internal_humidity']))
-            print('    Rack Temp: \033[1m{} \u00B0C\033[0m'.format(latest['rack_temperature']))
-            print('    Rack Hum.: \033[1m{} %RH\033[0m'.format(latest['rack_humidity']))
-            print('Tel. Sec. Sys: \033[1m{}\033[0m'.format(security_system))
-            print('  Mains Power: \033[1m{}\033[0m'.format(mains_power))
-
-        if daemon == daemons.superwasp_roomalert:
-            aircon = 'ACTIVE' if not latest['aircon_no_airflow'] else 'INACTIVE'
-            roof = 'CLOSED' if latest['roof_closed'] else 'OPEN'
-            roof_power = 'ON' if latest['roof_power'] else 'OFF'
-            print(' Comp Rm Temp: \033[1m{} \u00B0C\033[0m'.format(latest['comp_room_temp']))
-            print(' Comp Rm Hum.: \033[1m{} %RH\033[0m'.format(latest['comp_room_humidity']))
-            print('    Rack Temp: \033[1m{} \u00B0C\033[0m'.format(latest['rack_temp']))
-            print('    Rack Hum.: \033[1m{} %RH\033[0m'.format(latest['rack_humidity']))
-            print('Rm Alert Temp: \033[1m{} \u00B0C\033[0m'.format(latest['roomalert_temp']))
-            print('Rm Alert Hum.: \033[1m{} %RH\033[0m'.format(latest['roomalert_humidity']))
-            print('Cam Rack Temp: \033[1m{} \u00B0C\033[0m'.format(latest['cam_rack_temp']))
-            print('      Air Con: \033[1m{}\033[0m'.format(aircon))
-            print('         Roof: \033[1m{}\033[0m'.format(roof))
-            print('   Roof Power: \033[1m{}\033[0m'.format(roof_power))
-
+            if 'values' in s:
+                line += s['values'][int(latest[key])]
+            else:
+                line += '{}'.format(latest[key]) + ' ' + s['units']
+            line += '\033[0m'
+            print(line)
         print()
     else:
         print('error: failed to query data')
 
     return 0
+
 
 def print_json(daemon):
     """Prints the latest environment data in machine-readable form"""
@@ -126,6 +97,7 @@ def print_json(daemon):
 
     return 0
 
+
 def print_usage():
     """Prints the utility help"""
     print('Usage: {} [onemetre|goto|nites|swasp] <command>'.format(SCRIPT_NAME))
@@ -135,6 +107,7 @@ def print_usage():
     print()
 
     return 1
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

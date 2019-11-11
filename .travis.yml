@@ -23,7 +23,8 @@ script:
  - deploy/repository/set-spec-release.sh onemetre-roomalert-server.spec
  - deploy/repository/set-spec-release.sh goto-roomalert-server.spec
  - deploy/repository/set-spec-release.sh observatory-roomalert-client.spec
- # Compile rpm packages by running `make` in a centos7 container
+ - deploy/repository/set-spec-release.sh python36-warwick-observatory-roomalert.spec
+  # Compile rpm packages by running `make` in a centos7 container
  - docker run --rm=true -e "USERID=${UID}" -v `pwd`:/src:rw centos:centos7 /bin/sh -c "cd src && deploy/make-on-centos7.sh"
  # Add rpm packages to the repository where they will be available for `yum update`ing
  - deploy/repository/add-packages.sh *.rpm

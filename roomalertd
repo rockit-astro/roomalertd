@@ -22,77 +22,25 @@ import datetime
 import json
 import socket
 import sys
+import threading
 import traceback
 import urllib.request
 import demjson
 import Pyro4
-from warwick.observatory.common import daemons, log
-
-# Configuration settings for daemon
-# label : (PyroDaemon, sensor_ip, is_legacy_device, sensors)
-# sensors: label : (sensor_class, sensor_class_id, sensor_type_str, return_type)
-CONFIG = {
-    'nites' : (daemons.nites_roomalert, '10.2.6.187', True, {
-        'internal_temperature' : ('sensor', 0, 'tempc', float),
-        'internal_humidity' : ('sensor', 0, 'humid', float),
-        'rack_temperature' : ('sensor', 2, 'tempc', float),
-        'rack_humidity' : ('sensor', 2, 'humid', float),
-        'security_system' : ('switch_sen', 7, 'status', bool),
-        'mains_power' : ('switch_sen', 0, 'status', bool)
-    }),
-
-    'swasp' : (daemons.superwasp_roomalert, '192.168.0.46', True, {
-        'roomalert_temp' : ('sensor', 0, 'tempc', float),
-        'roomalert_humidity' : ('sensor', 0, 'humid', float),
-        'rack_temp' : ('sensor', 1, 'tempc', float),
-        'rack_humidity' : ('sensor', 1, 'humid', float),
-        'cam_rack_temp' : ('sensor', 2, 'tempc', float),
-        'comp_room_temp' : ('sensor', 3, 'tempc', float),
-        'comp_room_humidity' : ('sensor', 3, 'humid', float),
-        'aircon_no_airflow' : ('switch_sen', 0, 'status', bool),
-        'roof_closed' : ('switch_sen', 1, 'status', bool),
-        'roof_power' : ('switch_sen', 2, 'status', bool)
-    }),
-
-    'onemetre' : (daemons.onemetre_roomalert, '10.2.6.209', False, {
-        'internal_temp' : ('sensor', 1, 'tc', float),
-        'internal_humidity' : ('sensor', 1, 'h', float),
-        'roomalert_temp' : ('internal_sen', 0, 'tc', float),
-        'roomalert_humidity' : ('internal_sen', 0, 'h', float),
-        'truss_temp' : ('sensor', 2, 'tc', float),
-        'hatch_closed' : ('s_sen', 0, 'stat', bool),
-        'trap_closed' : ('s_sen', 1, 'stat', bool),
-        'security_system_safe' : ('s_sen', 2, 'stat', bool)
-    }),
-
-    'goto' : (daemons.goto_roomalert, '10.2.6.5', False, {
-        'internal_temp' : ('sensor', 1, 'tc', float),
-        'internal_humidity' : ('sensor', 1, 'h', float),
-        'dome2_internal_temp' : ('sensor', 0, 'tc', float),
-        'dome2_internal_humidity' : ('sensor', 0, 'h', float),
-        'roomalert_temp' : ('internal_sen', 0, 'tc', float),
-        'roomalert_humidity' : ('internal_sen', 0, 'h', float),
-    })
-}
-
-ROOMALERT_PORT = 80
-ROOMALERT_QUERY_TIMEOUT = 5
+from warwick.observatory.common import log
+from warwick.observatory.roomalert import Config
 
 # Set automatically when generating RPM package
 SOFTWARE_VERSION = 'UNKNOWN'
 
-# pylint: disable=broad-except
-# pylint: disable=too-few-public-methods
-# pylint: disable=invalid-name
 
-
-def query_legacy_roomalert(hostname, port, timeout):
+def query_legacy_roomalert(config):
     """Query json data from older roomalert versions that violate HTTP/JSON standards"""
     # The Room Alert omits the HTTP header when returning JSON.
     # This violates the HTTP spec and prevents us from using the
     # standard query libraries.  We instead speak HTTP ourselves over a socket.
     try:
-        sock = socket.create_connection((hostname, port), timeout)
+        sock = socket.create_connection((config.roomalert_ip, config.roomalert_port), config.roomalert_query_timeout)
         sock.sendall('GET /getData.htm HTTP/1.0\n\n'.encode('ascii'))
 
         data = [sock.recv(4096)]
@@ -100,14 +48,14 @@ def query_legacy_roomalert(hostname, port, timeout):
             data.append(sock.recv(4096))
 
     except Exception as exception:
-        raise Exception('Socket error while querying {}: {}'.format(hostname, str(exception)))
+        raise Exception('Socket error while querying {}: {}'.format(config.roomalert_ip, str(exception)))
 
     # The first line will either be the JSON we want, or a raw HTTP header
     # The name field may contain invalid ascii characters, so mask out the top bit
     response = ''.join(bytes([bb & 0x7F for bb in b]).decode('ascii') for b in data)
 
     if response[0] != '{':
-        raise Exception('Unexpected response from {}: {}'.format(hostname, response))
+        raise Exception('Unexpected response from {}: {}'.format(config.roomalert_ip, response))
 
     # The JSON returned by earlier firmwares omits quotes around the keys
     # This violates the JSON specification, and is not accepted by the
@@ -115,69 +63,86 @@ def query_legacy_roomalert(hostname, port, timeout):
     return demjson.decode(response)
 
 
-def query_modern_roomalert(hostname, port, timeout):
+def query_modern_roomalert(config):
     """Query json data from newer roomalert versions that support proper HTTP/JSON standards"""
     try:
-        url = 'http://' + hostname + ':' + str(port) + '/getData.json'
-        with urllib.request.urlopen(url, None, timeout) as response:
+        url = 'http://' + config.roomalert_ip + ':' + str(config.roomalert_port) + '/getData.json'
+        with urllib.request.urlopen(url, None, config.roomalert_query_timeout) as response:
             response = response.read().decode('ascii')
         return json.loads(response)
 
     except Exception as exception:
-        raise Exception('Socket error while querying {}: {}'.format(hostname, str(exception)))
+        raise Exception('Socket error while querying {}: {}'.format(config.roomalert_ip, str(exception)))
 
 
 class RoomAlertDaemon:
     """Wraps a web request to the RoomAlert and dealing with its malformed responses"""
-    def __init__(self, name, config):
+    def __init__(self, config):
         """Set which Room Alert to query"""
-        self._name = name
-        self._ip = config[1]
-        self._query_data = query_legacy_roomalert if config[2] else query_modern_roomalert
-        self._query_failed = False
-        self._sensors = config[3]
+        self._config = config
+        self._query_data = query_legacy_roomalert if config.roomalert_legacy_api else query_modern_roomalert
+        self._last_query_failed = False
+
+        self._lock = threading.Lock()
+        self._last_measurement_date = None
+        self._last_measurement = None
 
     @Pyro4.expose
     def last_measurement(self):
         """Query the latest valid measurement.
         May return None if no data is available"""
-        try:
-            data = self._query_data(self._ip, ROOMALERT_PORT, ROOMALERT_QUERY_TIMEOUT)
+        now = datetime.datetime.utcnow()
 
-            dic = {}
-            date = datetime.datetime.strptime(data['date'], "%m/%d/%y %H:%M:%S")
-            dic.update({
-                # The roomalert reported date may be grossly wrong, so default to the current time
-                'date': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-                'roomalert_date': date.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                'software_version': SOFTWARE_VERSION
-            })
+        # Rate limit queries
+        with self._lock:
+            if self._last_measurement_date and (now - self._last_measurement_date).total_seconds() < self._config.query_ratelimit:
+                return self._last_measurement
 
-            for key in self._sensors:
-                t = self._sensors[key]
-                dic.update({key : t[-1](data[t[0]][t[1]][t[2]])})
+            try:
+                data = self._query_data(self._config)
 
-            if self._query_failed:
-                log.info(self._name, 'Restored contact with Room Alert')
-                self._query_failed = False
+                dic = {}
+                date = datetime.datetime.strptime(data['date'], "%m/%d/%y %H:%M:%S")
+                now = datetime.datetime.utcnow()
+                dic.update({
+                    # The roomalert reported date may be grossly wrong, so default to the current time
+                    'date': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'roomalert_date': date.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'software_version': SOFTWARE_VERSION
+                })
 
-            return dic
+                for sensor in self._config.sensors:
+                    dic.update({sensor['id'] : self._config.resolve_sensor_measurement(sensor, data)})
 
-        except Exception:
-            print('{} ERROR: failed to query from RoomAlert:'.format(datetime.datetime.utcnow()))
-            traceback.print_exc(file=sys.stdout)
+                if self._last_query_failed:
+                    log.info(self._config.log_name, 'Restored contact with Room Alert')
+                    self._last_query_failed = False
 
-            if not self._query_failed:
-                log.error(self._name, 'Lost contact with Room Alert')
+                self._last_measurement = dic
+                self._last_measurement_date = now
 
-            self._query_failed = True
+                return dic
+
+            except Exception:
+                print('{} ERROR: failed to query from RoomAlert:'.format(datetime.datetime.utcnow()))
+                traceback.print_exc(file=sys.stdout)
+
+            if not self._last_query_failed:
+                log.error(self._config.log_name, 'Lost contact with Room Alert')
+
+            self._last_query_failed = True
             return None
 
+    @Pyro4.expose
+    def measurement_sensors(self):
+        """
+        Returns a dictionary of sensor definitions
+        """
+        return {s['id']: s for s in self._config.sensors}
 
 if __name__ == '__main__':
-    description = 'Room Alert Server'
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('instrument', choices=CONFIG.keys(), help='Select an instrument')
+    parser = argparse.ArgumentParser(description='Room Alert Server')
+    parser.add_argument('config', help='Path to configuration json file')
     args = parser.parse_args()
-    roomalert = CONFIG[args.instrument]
-    roomalert[0].launch(RoomAlertDaemon(args.instrument + '_roomalertd', roomalert))
+    _config = Config(args.config)
+    _config.daemon.launch(RoomAlertDaemon(_config))

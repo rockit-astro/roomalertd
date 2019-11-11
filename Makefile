@@ -14,6 +14,7 @@ all:
 	${RPMBUILD} -ba onemetre-roomalert-server.spec
 	${RPMBUILD} -ba goto-roomalert-server.spec
 	${RPMBUILD} -ba observatory-roomalert-client.spec
+	${RPMBUILD} -ba python36-warwick-observatory-roomalert.spec
 	mv build/noarch/*.rpm .
 	rm -rf build
 	mv roomalertd.bak roomalertd
