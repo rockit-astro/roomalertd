@@ -63,6 +63,21 @@ CONFIG_SCHEMA = {
         'roomalert_legacy_api': {
             'type': 'boolean'
         },
+        'reboot_power_daemon': {
+            'type': 'string',
+            'daemon_name': True
+        },
+        'reboot_power_switch': {
+            'type': 'string'
+        },
+        'reboot_power_delay': {
+            'type': 'number',
+            'min': 5
+        },
+        'reboot_power_timeout': {
+            'type': 'number',
+            'min': 30
+        },
         'sensors': {
             'type': 'array',
             'items': {
@@ -175,6 +190,13 @@ class Config:
         self.roomalert_query_timeout = int(config_json['roomalert_query_timeout'])
         self.roomalert_legacy_api = bool(config_json['roomalert_legacy_api'])
         self.sensors = config_json['sensors']
+
+        power_daemon = config_json.get('reboot_power_daemon', None)
+        if power_daemon:
+            self.reboot_power_daemon = getattr(daemons, power_daemon)
+        self.reboot_power_switch = config_json.get('reboot_power_switch', None)
+        self.reboot_power_delay = int(config_json.get('reboot_power_delay', 5))
+        self.reboot_power_timeout = int(config_json.get('reboot_power_timeout', 30))
 
     def resolve_sensor_measurement(self, sensor, data):
         sensor_type = (LEGACY_SENSOR_TYPES if self.roomalert_legacy_api else MODERN_SENSOR_TYPES)[sensor['type']]

@@ -6,6 +6,10 @@
   "roomalert_port": 80,
   "roomalert_query_timeout": 5,
   "roomalert_legacy_api": false,
+  "reboot_power_daemon": "onemetre_power",
+  "reboot_power_switch": "roomalert",
+  "reboot_power_delay": 15,
+  "reboot_power_timeout": 30,
   "sensors": [
     {
       "id": "internal_temp",
