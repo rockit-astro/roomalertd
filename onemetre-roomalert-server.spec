@@ -1,12 +1,12 @@
 Name:      onemetre-roomalert-server
-Version:   3.1.0
+Version:   3.1.1
 Release:   0
 Url:       https://github.com/warwick-one-metre/roomalertd
 Summary:   Room Alert daemon for the Warwick one-metre telescope.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
-Requires:  python36, python36-Pyro4, python36-demjson, python36-warwick-observatory-common, python36-warwick-observatory-roomalert
+Requires:  python3, python3-Pyro4, python3-demjson, python3-warwick-observatory-common, python3-warwick-observatory-roomalert
 Requires:  observatory-log-client, %{?systemd_requires}
 
 %description

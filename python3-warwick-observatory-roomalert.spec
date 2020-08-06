@@ -1,5 +1,5 @@
-Name:           python36-warwick-observatory-roomalert
-Version:        3.0.0
+Name:           python3-warwick-observatory-roomalert
+Version:        3.0.1
 Release:        0
 License:        GPL3
 Summary:        Common backend code for the RoomAlert daemons.
