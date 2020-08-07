@@ -24,22 +24,6 @@
       "key": "h"
     },
     {
-      "id": "dome2_internal_temp",
-      "label": "Internal Temp (D2)",
-      "units": "\u00B0C",
-      "type": "digital",
-      "index": 0,
-      "key": "tc"
-    },
-    {
-      "id": "dome2_internal_humidity",
-      "label": "Internal Hum. (D2)",
-      "units": "%RH",
-      "type": "digital",
-      "index": 0,
-      "key": "h"
-    },
-    {
       "id": "roomalert_temp",
       "label": "Rm Alert Temp",
       "units": "%RH",
