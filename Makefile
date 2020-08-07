@@ -11,8 +11,7 @@ all:
 	mkdir -p build
 	cp roomalertd roomalertd.bak
 	awk '{sub("SOFTWARE_VERSION = .*$$","SOFTWARE_VERSION = \"$(SERVER_VERSION) ($(GIT_VERSION))\""); print $0}' roomalertd.bak > roomalertd
-	${RPMBUILD} -ba onemetre-roomalert-server.spec
-	${RPMBUILD} -ba goto-roomalert-server.spec
+	${RPMBUILD} -ba observatory-roomalert-server.spec
 	${RPMBUILD} -ba observatory-roomalert-client.spec
 	${RPMBUILD} -ba python3-warwick-observatory-roomalert.spec
 	mv build/noarch/*.rpm .

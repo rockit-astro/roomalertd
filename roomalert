@@ -109,6 +109,28 @@ def print_json(daemon):
     return 0
 
 
+def enable_relay(daemon):
+    try:
+        with daemon.connect() as roomalert:
+            roomalert.set_relay(True)
+    except Pyro4.errors.CommunicationError:
+        print('error: unable to communicate with Room Alert daemon')
+        return 1
+
+    return 0
+
+
+def disable_relay(daemon):
+    try:
+        with daemon.connect() as roomalert:
+            roomalert.set_relay(False)
+    except Pyro4.errors.CommunicationError:
+        print('error: unable to communicate with Room Alert daemon')
+        return 1
+
+    return 0
+
+
 def print_usage():
     """Prints the utility help"""
     print('Usage: {} [onemetre|goto|nites|swasp] <command>'.format(SCRIPT_NAME))
@@ -127,6 +149,8 @@ if __name__ == '__main__':
     commands = {
         'status': print_status,
         'json': print_json,
+        'enable': enable_relay,
+        'disable': disable_relay,
     }
 
     if sys.argv[1] not in DAEMONS or sys.argv[2] not in commands:
