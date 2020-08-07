@@ -191,9 +191,11 @@ class Config:
         self.roomalert_legacy_api = bool(config_json['roomalert_legacy_api'])
         self.sensors = config_json['sensors']
 
+        self.reboot_power_daemon = None
         power_daemon = config_json.get('reboot_power_daemon', None)
         if power_daemon:
             self.reboot_power_daemon = getattr(daemons, power_daemon)
+
         self.reboot_power_switch = config_json.get('reboot_power_switch', None)
         self.reboot_power_delay = int(config_json.get('reboot_power_delay', 5))
         self.reboot_power_timeout = int(config_json.get('reboot_power_timeout', 30))
