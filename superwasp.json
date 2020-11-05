@@ -2,7 +2,7 @@
   "daemon": "superwasp_roomalert",
   "log_name": "swasp_roomalertd",
   "query_ratelimit": 5,
-  "roomalert_ip": "192.168.0.46",
+  "roomalert_ip": "10.2.6.116",
   "roomalert_port": 80,
   "roomalert_query_timeout": 5,
   "roomalert_legacy_api": true,
