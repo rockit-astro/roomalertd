@@ -24,16 +24,16 @@
       "key": "humid"
     },
     {
-      "id": "rack_temp",
-      "label": "Rack Temp",
+      "id": "cam_room_temp",
+      "label": "Cam Rm Temp",
       "units": "\u00B0C",
       "type": "digital",
       "index": 1,
       "key": "tempc"
     },
     {
-      "id": "rack_humidity",
-      "label": "Rack Hum.",
+      "id": "cam_room_humidity",
+      "label": "Cam Rm Hum.",
       "units": "%RH",
       "type": "digital",
       "index": 1,
