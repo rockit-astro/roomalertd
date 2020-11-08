@@ -2,7 +2,7 @@
   "daemon": "goto_roomalert",
   "log_name": "goto_roomalertd",
   "query_ratelimit": 5,
-  "roomalert_ip": "10.2.6.5",
+  "roomalert_ip": "10.2.6.209",
   "roomalert_port": 80,
   "roomalert_query_timeout": 5,
   "roomalert_legacy_api": false,

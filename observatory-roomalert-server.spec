@@ -1,5 +1,5 @@
 Name:      observatory-roomalert-server
-Version:   3.2.4
+Version:   3.2.5
 Release:   0
 Url:       https://github.com/warwick-one-metre/roomalertd
 Summary:   Room Alert daemon for the Warwick La Palma telescopes.
@@ -21,7 +21,6 @@ mkdir -p %{buildroot}%{_sysconfdir}/roomalertd/
 
 %{__install} %{_sourcedir}/roomalertd %{buildroot}%{_bindir}
 %{__install} %{_sourcedir}/roomalertd@.service %{buildroot}%{_unitdir}
-%{__install} %{_sourcedir}/onemetre.json %{buildroot}%{_sysconfdir}/roomalertd/
 %{__install} %{_sourcedir}/nites.json %{buildroot}%{_sysconfdir}/roomalertd/
 %{__install} %{_sourcedir}/goto.json %{buildroot}%{_sysconfdir}/roomalertd/
 %{__install} %{_sourcedir}/superwasp.json %{buildroot}%{_sysconfdir}/roomalertd/
@@ -40,7 +39,6 @@ mkdir -p %{buildroot}%{_sysconfdir}/roomalertd/
 %{_bindir}/roomalertd
 %defattr(-,root,root,-)
 %{_unitdir}/roomalertd@.service
-%{_sysconfdir}/roomalertd/onemetre.json
 %{_sysconfdir}/roomalertd/nites.json
 %{_sysconfdir}/roomalertd/goto.json
 %{_sysconfdir}/roomalertd/superwasp.json
