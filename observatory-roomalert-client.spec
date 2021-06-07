@@ -1,17 +1,14 @@
 Name:      observatory-roomalert-client
-Version:   3.0.2
+Version:   20210607
 Release:   0
 Url:       https://github.com/warwick-one-metre/roomalertd
-Summary:   Room Alert client for the Warwick La Palma telescopes.
+Summary:   Room Alert client.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
 Requires:  python3, python3-Pyro4, python3-warwick-observatory-common
 
 %description
-Part of the observatory software for the Warwick La Palma telescopes.
-
-roomalert is a commandline utility that queries the Room Alert daemon.
 
 %build
 mkdir -p %{buildroot}%{_bindir}

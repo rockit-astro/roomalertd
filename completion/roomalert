@@ -5,15 +5,13 @@ _roomalert()
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="onemetre goto nites swasp"
+    prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 
-    case "${prev}" in
-        onemetre|goto|nites)
-            opts="status json"
-            ;;
-        *)
-            ;;
-    esac
+    if [[ "${prevprev}" == "roomalert" ]]; then
+        opts="status json"
+    else
+        opts=$(roomalert list-roomalerts)
+    fi
 
     COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
     return 0

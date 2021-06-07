@@ -18,10 +18,9 @@ from distutils.core import setup
 
 setup(name='warwick.observatory.roomalert',
       version='0',
-      packages = ['warwick.observatory.roomalert'],
+      packages=['warwick.observatory.roomalert'],
       author='Paul Chote',
       description='Common backend code for the RoomAlert daemons',
       license='GNU GPLv3',
       author_email='p.chote@warwick.ac.uk',
-      url='https://github.com/warwick-one-metre/roomalertd',
-)
+      url='https://github.com/warwick-one-metre/roomalertd')

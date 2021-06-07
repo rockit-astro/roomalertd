@@ -118,7 +118,8 @@ class RoomAlertDaemon:
 
         # Rate limit queries
         with self._lock:
-            if self._last_measurement_date and (now - self._last_measurement_date).total_seconds() < self._config.query_ratelimit:
+            last_measurement_age = (now - self._last_measurement_date).total_seconds()
+            if self._last_measurement_date and last_measurement_age < self._config.query_ratelimit:
                 return self._last_measurement
 
             try:
