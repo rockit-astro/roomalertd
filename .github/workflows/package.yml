@@ -1,0 +1,44 @@
+name: RPM Packaging
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  linux:
+    name: RPM Packaging
+    runs-on: ubuntu-20.04
+    container: centos:centos7
+    steps:
+      - name: Install Dependencies
+        run: |
+          # CentOS 7's git version is too old for the checkout action so fetch from ius instead
+          yum -y install https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          yum -y install git224 rpm-build rpm-sign rsync make python3-rpm-macros python36-devel
+      - name: Clone Repository
+        uses: actions/checkout@v2
+
+      - name: Clone Package Repository
+        uses: actions/checkout@v2
+        with:
+          repository: warwick-one-metre/centos-packages
+          token: ${{ secrets.DEPLOY_TOKEN }}
+          path: centos-packages
+
+      - name: Set Package Versions
+        run: |
+          # Set the spec Revision field to <latest in repo> + 1
+          centos-packages/set-spec-release.sh observatory-roomalert-server.spec
+          centos-packages/set-spec-release.sh observatory-roomalert-client.spec
+          centos-packages/set-spec-release.sh python3-warwick-observatory-roomalert.spec
+          centos-packages/set-spec-release.sh observatory-roomalert-data.spec
+      - name: Package RPMs
+        run:
+          make
+
+      - name: Push Packages
+        env:
+          RPM_SIGNING_KEY: ${{ secrets.RPM_SIGNING_KEY }}
+        run: |
+          centos-packages/sign-and-push-packages.sh *.rpm

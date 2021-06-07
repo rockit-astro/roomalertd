@@ -18,39 +18,33 @@
 """Commandline client for querying the latest measurement from roomalertd"""
 
 import datetime
+import glob
 import json
 import os
 import sys
 import Pyro4
-from warwick.observatory.common import daemons
+from warwick.observatory.common import TFmt
+from warwick.observatory.roomalert import Config
 
 SCRIPT_NAME = os.path.basename(sys.argv[0])
 sys.excepthook = Pyro4.util.excepthook
 
-DAEMONS = {
-    'onemetre': daemons.onemetre_roomalert,
-    'goto': daemons.goto_roomalert,
-    'nites': daemons.nites_roomalert,
-    'swasp': daemons.superwasp_roomalert
-}
 
-
-def run_command(daemon, command):
-    """Prints the message associated with a status code and returns the code"""
+def run_command(config_paths, roomalert_id, command, args):
+    """Runs a command and returns the code"""
+    config = Config(config_paths[roomalert_id])
     try:
-        ret = command(daemon)
+        ret = command(config, sorted(config_paths.keys()), args)
     except Pyro4.errors.CommunicationError:
-        print('error: unable to communicate with the Room Alert daemon')
         ret = 1
 
     return ret
 
 
-def print_status(daemon):
+def print_status(config, *_):
     """Prints the latest environment data in human-readable form"""
-    latest = None
     try:
-        with daemon.connect() as roomalert:
+        with config.daemon.connect() as roomalert:
             latest = roomalert.last_measurement()
             sensors = roomalert.measurement_sensors()
     except Pyro4.errors.CommunicationError:
@@ -59,7 +53,7 @@ def print_status(daemon):
 
     if latest is not None and sensors is not None:
         date = datetime.datetime.strptime(latest['date'], '%Y-%m-%dT%H:%M:%SZ')
-        print('Data received \033[1m{}\033[0m:'.format(date))
+        print('Data received ' + TFmt.Bold + str(date) + TFmt.Clear)
 
         # Find the longest label to set the parameter indent
         max_label_length = 0
@@ -68,17 +62,17 @@ def print_status(daemon):
 
         for key, s in sensors.items():
             label_padding = max_label_length - len(s['label'])
-            line = ' ' * label_padding + s['label'] + ': \033[1m'
+            line = ' ' * label_padding + s['label'] + ': ' + TFmt.Bold
 
             if 'values' in s:
                 line += s['values'][int(latest[key])]
             else:
-                line += '{}'.format(latest[key]) + ' ' + s['units']
+                line += str(latest[key]) + ' ' + s['units']
 
             if not latest.get(key + '_valid', True):
-                line += '\033[91m (INVALID)'
+                line += TFmt.Red + ' (INVALID)'
 
-            line += '\033[0m'
+            line += TFmt.Clear
             print(line)
         print()
     else:
@@ -86,19 +80,20 @@ def print_status(daemon):
 
     return 0
 
+
 def format_value(data, valid, suffix=''):
     """Builds a formatted string with a value"""
-    ret = FMT_BOLD + str(data) + suffix
+    ret = TFmt.Bold + str(data) + suffix
     if not valid:
-        ret += FMT_RED + ' (INVALID)'
-    ret += FMT_CLEAR
+        ret += TFmt.Red + ' (INVALID)'
+    ret += TFmt.Clear
     return ret
 
-def print_json(daemon):
+
+def print_json(config, *_):
     """Prints the latest environment data in machine-readable form"""
-    latest = None
     try:
-        with daemon.connect() as roomalert:
+        with config.daemon.connect() as roomalert:
             latest = roomalert.last_measurement()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
@@ -109,9 +104,9 @@ def print_json(daemon):
     return 0
 
 
-def enable_relay(daemon):
+def enable_relay(config, *_):
     try:
-        with daemon.connect() as roomalert:
+        with config.daemon.connect() as roomalert:
             roomalert.set_relay(True)
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
@@ -120,9 +115,9 @@ def enable_relay(daemon):
     return 0
 
 
-def disable_relay(daemon):
+def disable_relay(config, *_):
     try:
-        with daemon.connect() as roomalert:
+        with config.daemon.connect() as roomalert:
             roomalert.set_relay(False)
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with Room Alert daemon')
@@ -131,9 +126,9 @@ def disable_relay(daemon):
     return 0
 
 
-def print_usage():
+def print_usage(config_paths):
     """Prints the utility help"""
-    print('Usage: {} [onemetre|goto|nites|swasp] <command>'.format(SCRIPT_NAME))
+    print('Usage: {} [{}] <command>'.format(SCRIPT_NAME, '|'.join(sorted(config_paths.keys()))))
     print()
     print('   status      print a human-readable summary of the Room Alert status')
     print('   json        print a machine-readable summary of the Room Alert status')
@@ -143,8 +138,24 @@ def print_usage():
 
 
 if __name__ == '__main__':
+    if 'ROOMALERTD_CONFIG_ROOT' in os.environ:
+        config_root = os.environ['ROOMALERTD_CONFIG_ROOT']
+    else:
+        config_root = '/etc/roomalertd'
+
+    configs = {os.path.basename(p)[:-5]: p for p in glob.glob(os.path.join(config_root, '*.json'))}
+    if not configs:
+        print('error: no roomalert configs were found in ' + config_root)
+        print('       run as ROOMALERTD_CONFIG_ROOT=/path/to/config/root ' + ' '.join(sys.argv))
+        print('       to specify the configuration root directory')
+        sys.exit(1)
+
+    if len(sys.argv) == 2 and sys.argv[1] == 'list-roomalerts':
+        print(' '.join(sorted(configs.keys())))
+        sys.exit(0)
+
     if len(sys.argv) < 3:
-        sys.exit(print_usage())
+        sys.exit(print_usage(configs))
 
     commands = {
         'status': print_status,
@@ -153,7 +164,7 @@ if __name__ == '__main__':
         'disable': disable_relay,
     }
 
-    if sys.argv[1] not in DAEMONS or sys.argv[2] not in commands:
-        sys.exit(print_usage())
+    if sys.argv[1] not in configs or sys.argv[2] not in commands:
+        sys.exit(print_usage(configs))
 
-    sys.exit(run_command(DAEMONS[sys.argv[1]], commands[sys.argv[2]]))
+    sys.exit(run_command(configs, sys.argv[1], commands[sys.argv[2]], sys.argv[3:]))
