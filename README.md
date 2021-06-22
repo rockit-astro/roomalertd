@@ -56,7 +56,7 @@ The automated packaging scripts will push 4 RPM packages to the observatory pack
 | python3-warwick-observatory-roomalert | Contains the python module with shared code. |
 | observatory-roomalert-data | Contains the json configuration for all of the Room Alerts. |
 
-The `observatory-roomalert-server`, `observatory-roomalert-client`, `observatory-roomalert-data` packages should be installed on the `gotoserver` machine (for SuperWASP and GOTO) and the CLASP TCS (for CLASP).
+The `observatory-roomalert-server`, `observatory-roomalert-client`, `observatory-roomalert-data` packages should be installed on the `gotoserver` machine (for SuperWASP and GOTO) and the `clasp-tcs` machine (for CLASP).
 The `observatory-roomalert-client` and `observatory-roomalert-data` packages can also be installed on the 1m machines, but this now uses [domealertd](https://github.com/warwick-one-metre/domealertd) instead of a Room Alert.
 
 After installing packages, the systemd service should be enabled:

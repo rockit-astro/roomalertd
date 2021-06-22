@@ -1,6 +1,6 @@
 {
-  "daemon": "nites_roomalert",
-  "log_name": "nites_roomalertd",
+  "daemon": "clasp_roomalert",
+  "log_name": "roomalertd@clasp",
   "query_ratelimit": 5,
   "roomalert_ip": "10.2.6.187",
   "roomalert_port": 80,
@@ -22,14 +22,6 @@
       "type": "digital",
       "index": 0,
       "key": "humid"
-    },
-    {
-      "id": "security_system",
-      "label": "Tel. Sec. Sys",
-      "values": ["TRIPPED", "SAFE"],
-      "type": "switch",
-      "index": 7,
-      "key": "status"
     },
     {
       "id": "mains_power",
