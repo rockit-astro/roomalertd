@@ -1,8 +1,8 @@
 {
-  "daemon": "goto_roomalert",
-  "log_name": "goto_roomalertd",
+  "daemon": "goto_dome1_roomalert",
+  "log_name": "roomalertd@goto1",
   "query_ratelimit": 5,
-  "roomalert_ip": "10.2.6.209",
+  "roomalert_ip": "10.2.6.5",
   "roomalert_port": 80,
   "roomalert_query_timeout": 5,
   "roomalert_legacy_api": false,
@@ -25,7 +25,7 @@
     },
     {
       "id": "roomalert_temp",
-      "label": "Rm Alert Temp",
+      "label": "Rm Alert Temp (D1)",
       "units": "%RH",
       "units": "\u00B0C",
       "type": "internal",
@@ -34,7 +34,7 @@
     },
     {
       "id": "roomalert_humidity",
-      "label": "Rm Alert Hum.",
+      "label": "Rm Alert Hum. (D1)",
       "units": "%RH",
       "type": "internal",
       "index": 0,

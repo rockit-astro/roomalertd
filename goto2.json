@@ -1,0 +1,28 @@
+{
+  "daemon": "goto_dome2_roomalert",
+  "log_name": "roomalertd@goto2",
+  "query_ratelimit": 5,
+  "roomalert_ip": "10.2.6.45",
+  "roomalert_port": 80,
+  "roomalert_query_timeout": 5,
+  "roomalert_legacy_api": false,
+  "sensors": [
+    {
+      "id": "roomalert_temp",
+      "label": "Rm Alert Temp (D2)",
+      "units": "%RH",
+      "units": "\u00B0C",
+      "type": "internal",
+      "index": 0,
+      "key": "tc"
+    },
+    {
+      "id": "roomalert_humidity",
+      "label": "Rm Alert Hum. (D2)",
+      "units": "%RH",
+      "type": "internal",
+      "index": 0,
+      "key": "h"
+    }
+  ]
+}
