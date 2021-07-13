@@ -23,6 +23,14 @@
       "type": "internal",
       "index": 0,
       "key": "h"
+    },
+    {
+      "id": "hatch_closed",
+      "label": "Hatch",
+      "values": ["OPEN", "CLOSED"],
+      "type": "switch",
+      "index": 0,
+      "key": "stat"
     }
   ]
 }
