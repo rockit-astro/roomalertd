@@ -1,5 +1,5 @@
 Name:      observatory-roomalert-data
-Version:   20210713
+Version:   20210913
 Release:   0
 Url:       https://github.com/warwick-one-metre/roomalertd
 Summary:   Room Alert configuration files.

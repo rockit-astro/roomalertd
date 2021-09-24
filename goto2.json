@@ -8,6 +8,22 @@
   "roomalert_legacy_api": false,
   "sensors": [
     {
+      "id": "internal_temp",
+      "label": "Internal Temp (D2)",
+      "units": "\u00B0C",
+      "type": "digital",
+      "index": 1,
+      "key": "tc"
+    },
+    {
+      "id": "internal_humidity",
+      "label": "Internal Hum. (D2)",
+      "type": "digital",
+      "units": "%RH",
+      "index": 1,
+      "key": "h"
+    },
+    {
       "id": "roomalert_temp",
       "label": "Rm Alert Temp (D2)",
       "units": "%RH",
