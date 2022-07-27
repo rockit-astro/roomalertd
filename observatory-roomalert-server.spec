@@ -6,7 +6,7 @@ Summary:   Room Alert daemon.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
-Requires:  python3, python3-Pyro4, python3-demjson, python3-warwick-observatory-common, python3-warwick-observatory-roomalert, %{?systemd_requires}
+Requires:  python3 python3-Pyro4 python3-demjson python3-warwick-observatory-common python3-warwick-observatory-roomalert
 
 %description
 
